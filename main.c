@@ -19,19 +19,20 @@ int main() {
                 break;
 
             case 3:
+                ingresarCantidadVehiculo();
+                break;
+            case 4:
                 venderVehiculo();
                 break;
-
-            case 4:
+            case 5:
                 listarVentas();
                 break;
-
-            case 5:
+            case 6:
                 printf("Saliendo del sistema...\n");
                 break;
-        }
+                }
 
-    } while (opcion != 5);
+    } while (opcion != 6);
 
     return 0;
 }
