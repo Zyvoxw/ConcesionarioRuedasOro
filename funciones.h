@@ -31,6 +31,8 @@ typedef struct {
 /* Utilidades */
 void leerCadena(char *cadena, int n);
 int leerEnteroConRango(int inicio, int fin);
+int validarCedula(char *cedula);
+
 int soloLetras(char *cadena);
 
 /* Menús */
@@ -42,6 +44,8 @@ int seleccionarEstado();
 void registrarCliente();
 
 /* Vehículos */
+void ingresarStockPorMarca();
+
 void buscarVehiculos();
 void ingresarCantidadVehiculo();
 void cargarVehiculosIniciales();
@@ -52,5 +56,4 @@ void listarVentas();
 
 /* Fecha */
 Fecha ingresarFecha();
-
 
