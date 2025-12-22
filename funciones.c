@@ -33,17 +33,32 @@
         return num;
     }
 
-    int soloLetras(char *cadena){
-        int i = 0;
-        while(cadena[i] != '\0'){
-            if(!((cadena[i] >= 'A' && cadena[i] <= 'Z') ||
-                (cadena[i] >= 'a' && cadena[i] <= 'z') ||
-                cadena[i] == ' ')){
+    int validarCedula(char *cedula){
+        int longitud = strlen(cedula);
+
+        if(longitud != 10)
+            return 0;
+
+        for(int i = 0; i < longitud; i++){
+            if(cedula[i] < '0' || cedula[i] > '9')
                 return 0;
-            }
-            i++;
         }
+
         return 1;
+    }
+
+
+    int soloLetras(char *cadena){
+            int i = 0;
+            while(cadena[i] != '\0'){
+                if(!((cadena[i] >= 'A' && cadena[i] <= 'Z') ||
+                    (cadena[i] >= 'a' && cadena[i] <= 'z') ||
+                    cadena[i] == ' ')){
+                    return 0;
+                }
+                i++;
+            }
+            return 1;
     }
 
     int menu(){
@@ -51,7 +66,7 @@
         do{
             printf("\n---- CONCESIONARIA RUEDAS DE ORO ----\n");
             printf("1. Registrar cliente\n");
-            printf("2. Ingresar cantidad de vehículos\n");
+            printf("2. Ingresar stock de vehículos\n");
             printf("3. Buscar vehículos\n");
             printf("4. Vender vehículo\n");
             printf("5. Listar ventas\n");
@@ -87,8 +102,16 @@
                 printf("Error: solo letras y espacios.\n");
         }while(!soloLetras(c.nombre));
 
-        printf("Cédula: ");
-        leerCadena(c.cedula, 20);
+        do{
+            printf("Cédula: ");
+            leerCadena(c.cedula, 20);
+
+            if(!validarCedula(c.cedula)){
+                printf("la cédula debe tener exactamente 10 números y no letras.\n");
+            }
+
+        }while(!validarCedula(c.cedula));
+
 
         fwrite(&c, sizeof(Cliente), 1, f);
         fclose(f);
@@ -140,54 +163,79 @@
 
     
 
-    void buscarVehiculos(){
-        Vehiculo v;
-        FILE *f = fopen("vehiculos.dat", "rb");
-        if(!f){
-            printf("No se pudo abrir el archivo.\n");
+   void buscarVehiculos(){
+    Vehiculo v;
+    FILE *f = fopen("vehiculos.dat", "rb");
+    if(!f){
+        printf("No se pudo abrir el archivo.\n");
+        return;
+    }
+
+    /* ===== 1. ESCOGER MARCA ===== */
+    int opMarca = menuMarcas();
+    char marca[30];
+
+    if(opMarca == 1) strcpy(marca, "Chevrolet");
+    else if(opMarca == 2) strcpy(marca, "Toyota");
+    else strcpy(marca, "Honda");
+
+    /* ===== 2. ESCOGER ESTADO ===== */
+    int usado = seleccionarEstado();   // 0 = nuevo | 1 = usado
+
+    printf("\nLISTADO DE VEHÍCULOS (%s - %s)\n",
+           marca, usado ? "Usado" : "Nuevo");
+    printf("--------------------------------------\n");
+
+    int encontrados = 0;
+
+    /* ===== 3. LISTADO ===== */
+    while(fread(&v, sizeof(Vehiculo), 1, f)){
+        if(strcmp(v.marca, marca) == 0 &&
+           v.usado == usado &&
+           v.cantidad > 0){
+
+            printf("ID:%d | %s | %s | $%.2f | Stock:%d\n",
+                   v.id,
+                   v.modelo,
+                   v.tipo,
+                   v.precio,
+                   v.cantidad);
+            encontrados = 1;
+        }
+    }
+
+    if(!encontrados){
+        printf("No hay vehículos disponibles.\n");
+        fclose(f);
+        return;
+    }
+
+    /* ===== 4. SELECCIÓN DEL VEHÍCULO ===== */
+    int idBuscar;
+    printf("\nIngrese el ID del vehículo para ver su información: ");
+    idBuscar = leerEnteroConRango(1,9999);
+
+    rewind(f);
+
+    /* ===== 5. MOSTRAR INFORMACIÓN COMPLETA ===== */
+    while(fread(&v, sizeof(Vehiculo), 1, f)){
+        if(v.id == idBuscar){
+            printf("\n--- INFORMACIÓN DEL VEHÍCULO ---\n");
+            printf("Marca: %s\n", v.marca);
+            printf("Modelo: %s\n", v.modelo);
+            printf("Tipo: %s\n", v.tipo);
+            printf("Estado: %s\n", v.usado ? "Usado" : "Nuevo");
+            printf("Precio: $%.2f\n", v.precio);
+            printf("Stock disponible: %d\n", v.cantidad);
+            fclose(f);
             return;
         }
-
-        
-        int opMarca = menuMarcas();
-        char marca[30];
-
-        if(opMarca == 1) strcpy(marca, "Chevrolet");
-        else if(opMarca == 2) strcpy(marca, "Toyota");
-        else strcpy(marca, "Honda");
-
-        
-        int usado = seleccionarEstado();  
-
-        printf("\nVehículos disponibles (%s - %s):\n",
-            marca, usado ? "Usado" : "Nuevo");
-        printf("----------------------------------------\n");
-
-        int encontrados = 0;   
-
-      
-        while(fread(&v, sizeof(Vehiculo), 1, f)){
-            if(v.cantidad > 0 &&
-            strcmp(v.marca, marca) == 0 &&
-            v.usado == usado){
-
-                printf("ID:%d | %s | %s | $%.2f | Stock:%d\n",
-                    v.id,
-                    v.modelo,
-                    v.tipo,
-                    v.precio,
-                    v.cantidad);
-
-                encontrados = 1;
-            }
-        }
-
-        if(!encontrados){
-            printf("No hay vehículos con esas características.\n");
-        }
-
-        fclose(f);
     }
+
+    printf("Vehículo no encontrado.\n");
+    fclose(f);
+}
+
 
     void venderVehiculo(){
        Cliente c;
@@ -277,22 +325,36 @@
     void listarVentas(){
         Venta v;
         FILE *f = fopen("ventas.dat", "rb");
-        if(!f) return;
+
+        if(!f){
+            printf("\nNo se ha realizado ninguna venta.\n");
+            return;
+        }
+
+        int hayVentas = 0;
 
         printf("\n--- VENTAS REGISTRADAS ---\n");
+
         while(fread(&v, sizeof(Venta), 1, f)){
+            printf("---------------------------------\n");
             printf("Cliente: %s\n", v.cliente.nombre);
-            printf("Vehículo: %s %s\n",
-                v.vehiculo.marca,
-                v.vehiculo.modelo);
-            printf("Total pagado: $%.2f\n", v.totalPagado);
+            printf("Vehículo: %s %s\n", v.vehiculo.marca, v.vehiculo.modelo);
+            printf("Estado: %s\n", v.vehiculo.usado ? "Usado" : "Nuevo");
             printf("Fecha: %02d/%02d/%d\n",
                 v.fechaVenta.dia,
                 v.fechaVenta.mes,
                 v.fechaVenta.anio);
+            printf("Total pagado: $%.2f\n", v.totalPagado);
+            hayVentas = 1;
         }
+
+        if(!hayVentas){
+            printf("\nNo se ha realizado ninguna venta.\n");
+        }
+
         fclose(f);
     }
+
 
     void cargarVehiculosIniciales(){
         FILE *f = fopen("vehiculos.dat","rb");
@@ -341,3 +403,70 @@ Fecha ingresarFecha() {
     return f;
 }
 
+void ingresarStockPorMarca(){
+    Vehiculo v;
+    FILE *f = fopen("vehiculos.dat", "wb");
+    if(!f){
+        printf("Error al abrir archivo.\n");
+        return;
+    }
+
+    int stock;
+
+    /* ========== CHEVROLET ========== */
+    printf("\n--- CHEVROLET ---\n");
+
+    printf("Stock Chevrolet Onix (Nuevo): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){1,"Chevrolet","Onix","Auto",0,19999,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    printf("Stock Chevrolet Groove (Nuevo): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){2,"Chevrolet","Groove","SUV",0,27999,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    printf("Stock Chevrolet D-Max (Usado): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){3,"Chevrolet","D-Max","Camioneta",1,24000,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    /* ========== TOYOTA ========== */
+    printf("\n--- TOYOTA ---\n");
+
+    printf("Stock Toyota Yaris (Nuevo): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){4,"Toyota","Yaris","Auto",0,20000,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    printf("Stock Toyota Corolla Cross (Nuevo): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){5,"Toyota","Corolla Cross","SUV",0,31000,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    printf("Stock Toyota Hilux (Usado): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){6,"Toyota","Hilux","Camioneta",1,28000,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    /* ========== HONDA ========== */
+    printf("\n--- HONDA ---\n");
+
+    printf("Stock Honda Civic (Nuevo): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){7,"Honda","Civic","Auto",0,42990,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    printf("Stock Honda CR-V (Usado): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){8,"Honda","CR-V","SUV",1,35000,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    printf("Stock Honda HR-V (Nuevo): ");
+    stock = leerEnteroConRango(0,50);
+    v = (Vehiculo){9,"Honda","HR-V","SUV",0,32000,stock};
+    fwrite(&v,sizeof(Vehiculo),1,f);
+
+    fclose(f);
+    printf("\nStock ingresado correctamente.\n");
+}
