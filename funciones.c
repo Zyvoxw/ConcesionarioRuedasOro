@@ -161,17 +161,15 @@
         return (op == 2);
     }
 
-    
-
-   void buscarVehiculos(){
-    Vehiculo v;
+  void buscarVehiculos(){
+    Vehiculo v, lista[20];
     FILE *f = fopen("vehiculos.dat", "rb");
     if(!f){
         printf("No se pudo abrir el archivo.\n");
         return;
     }
 
-    /* ===== 1. ESCOGER MARCA ===== */
+    /* 1. ESCOGER MARCA */
     int opMarca = menuMarcas();
     char marca[30];
 
@@ -179,60 +177,49 @@
     else if(opMarca == 2) strcpy(marca, "Toyota");
     else strcpy(marca, "Honda");
 
-    /* ===== 2. ESCOGER ESTADO ===== */
-    int usado = seleccionarEstado();   // 0 = nuevo | 1 = usado
+    /* 2. ESCOGER ESTADO */
+    int usado = seleccionarEstado();
 
-    printf("\nLISTADO DE VEHÍCULOS (%s - %s)\n",
+    printf("\nMODELOS DISPONIBLES (%s - %s)\n",
            marca, usado ? "Usado" : "Nuevo");
-    printf("--------------------------------------\n");
+    printf("--------------------------------\n");
 
-    int encontrados = 0;
+    int count = 0;
 
-    /* ===== 3. LISTADO ===== */
+    /* 3. LISTAR SOLO MODELOS */
     while(fread(&v, sizeof(Vehiculo), 1, f)){
-        if(strcmp(v.marca, marca) == 0 &&
-           v.usado == usado &&
-           v.cantidad > 0){
+        if(v.cantidad > 0 &&
+           strcmp(v.marca, marca) == 0 &&
+           v.usado == usado){
 
-            printf("ID:%d | %s | %s | $%.2f | Stock:%d\n",
-                   v.id,
-                   v.modelo,
-                   v.tipo,
-                   v.precio,
-                   v.cantidad);
-            encontrados = 1;
+            lista[count] = v;
+            printf("%d. %s\n", count + 1, v.modelo);
+            count++;
         }
     }
 
-    if(!encontrados){
+    if(count == 0){
         printf("No hay vehículos disponibles.\n");
         fclose(f);
         return;
     }
 
-    /* ===== 4. SELECCIÓN DEL VEHÍCULO ===== */
-    int idBuscar;
-    printf("\nIngrese el ID del vehículo para ver su información: ");
-    idBuscar = leerEnteroConRango(1,9999);
+    /* 4. SELECCIONAR MODELO */
+    int op;
+    printf("\nSeleccione el número del modelo: ");
+    op = leerEnteroConRango(1, count);
 
-    rewind(f);
+    Vehiculo seleccionado = lista[op - 1];
 
-    /* ===== 5. MOSTRAR INFORMACIÓN COMPLETA ===== */
-    while(fread(&v, sizeof(Vehiculo), 1, f)){
-        if(v.id == idBuscar){
-            printf("\n--- INFORMACIÓN DEL VEHÍCULO ---\n");
-            printf("Marca: %s\n", v.marca);
-            printf("Modelo: %s\n", v.modelo);
-            printf("Tipo: %s\n", v.tipo);
-            printf("Estado: %s\n", v.usado ? "Usado" : "Nuevo");
-            printf("Precio: $%.2f\n", v.precio);
-            printf("Stock disponible: %d\n", v.cantidad);
-            fclose(f);
-            return;
-        }
-    }
+    /* 5. MOSTRAR INFORMACIÓN COMPLETA */
+    printf("\n--- INFORMACIÓN DEL VEHÍCULO ---\n");
+    printf("Marca: %s\n", seleccionado.marca);
+    printf("Modelo: %s\n", seleccionado.modelo);
+    printf("Tipo: %s\n", seleccionado.tipo);
+    printf("Estado: %s\n", seleccionado.usado ? "Usado" : "Nuevo");
+    printf("Precio: $%.2f\n", seleccionado.precio);
+    printf("Stock disponible: %d\n", seleccionado.cantidad);
 
-    printf("Vehículo no encontrado.\n");
     fclose(f);
 }
 
@@ -470,3 +457,4 @@ void ingresarStockPorMarca(){
     fclose(f);
     printf("\nStock ingresado correctamente.\n");
 }
+
