@@ -144,53 +144,46 @@
         Vehiculo v;
         FILE *f = fopen("vehiculos.dat", "rb");
         if(!f){
-            printf("No se pudo abrir el archivo de vehículos.\n");
+            printf("No se pudo abrir el archivo.\n");
             return;
         }
 
-        /* ====== MENÚ DE MARCAS ====== */
+        
         int opMarca = menuMarcas();
         char marca[30];
 
-        if(opMarca == 1)
-            strcpy(marca, "Chevrolet");
-        else if(opMarca == 2)
-            strcpy(marca, "Toyota");
-        else
-            strcpy(marca, "Honda");
+        if(opMarca == 1) strcpy(marca, "Chevrolet");
+        else if(opMarca == 2) strcpy(marca, "Toyota");
+        else strcpy(marca, "Honda");
 
-        /* ===== 2. ESCOGER ESTADO ===== */
-        int usado = seleccionarEstado();  // 0 nuevo | 1 usado
+        
+        int usado = seleccionarEstado();  
 
         printf("\nVehículos disponibles (%s - %s):\n",
             marca, usado ? "Usado" : "Nuevo");
         printf("----------------------------------------\n");
 
-        int encontrados = 0;
+        int encontrados = 0;   
 
-        /* ====== MOSTRAR VEHÍCULOS ====== */
-        printf("\nVehículos disponibles de la marca %s:\n", marca);
-        printf("-----------------------------------\n");
+      
+        while(fread(&v, sizeof(Vehiculo), 1, f)){
+            if(v.cantidad > 0 &&
+            strcmp(v.marca, marca) == 0 &&
+            v.usado == usado){
 
-        int encontrados = 0;
+                printf("ID:%d | %s | %s | $%.2f | Stock:%d\n",
+                    v.id,
+                    v.modelo,
+                    v.tipo,
+                    v.precio,
+                    v.cantidad);
 
-         while(fread(&v, sizeof(Vehiculo), 1, f)){
-        if(v.cantidad > 0 &&
-           strcmp(v.marca, marca) == 0 &&
-           v.usado == usado){
-
-            printf("ID:%d | %s | %s | $%.2f | Stock:%d\n",
-                   v.id,
-                   v.modelo,
-                   v.tipo,
-                   v.precio,
-                   v.cantidad);
-            encontrados = 1;
+                encontrados = 1;
+            }
         }
-    }
 
         if(!encontrados){
-            printf("No hay vehículos disponibles de esta marca.\n");
+            printf("No hay vehículos con esas características.\n");
         }
 
         fclose(f);
@@ -347,3 +340,4 @@ Fecha ingresarFecha() {
 
     return f;
 }
+
