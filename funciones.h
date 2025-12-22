@@ -46,7 +46,7 @@ void registrarCliente();
 /* Vehículos */
 void ingresarStockPorMarca();
 
-void buscarVehiculos();
+Vehiculo buscarVehiculos();
 void ingresarCantidadVehiculo();
 void cargarVehiculosIniciales();
 
@@ -56,4 +56,5 @@ void listarVentas();
 
 /* Fecha */
 Fecha ingresarFecha();
+float calcularCredito(float precio);
 
