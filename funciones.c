@@ -51,14 +51,25 @@
         do{
             printf("\n---- CONCESIONARIA RUEDAS DE ORO ----\n");
             printf("1. Registrar cliente\n");
-            printf("2. Buscar vehículos\n");
-            printf("3. Vender vehículo\n");
-            printf("4. Listar ventas\n");
-            printf("5. Salir\n");
+            printf("2. Ingresar cantidad de vehículos\n");
+            printf("3. Buscar vehículos\n");
+            printf("4. Vender vehículo\n");
+            printf("5. Listar ventas\n");
+            printf("6. Salir\n");
             printf(">> ");
-            op = leerEnteroConRango(1,5);
-        }while(op < 1 || op > 5);
+
+            op = leerEnteroConRango(1,6);
+        }while(op < 1 || op > 6);
         return op;
+    }
+
+    int menuMarcas(){
+        printf("\nSeleccione la marca:\n");
+        printf("1. Chevrolet\n");
+        printf("2. Toyota\n");
+        printf("3. Honda\n");
+        printf(">> ");
+        return leerEnteroConRango(1,3);
     }
 
     void registrarCliente(){
@@ -70,7 +81,7 @@
         c.id = leerEnteroConRango(1,9999);
 
         do{
-            printf("Nombre (solo letras): ");
+            printf("Nombre: ");
             leerCadena(c.nombre, 50);
             if(!soloLetras(c.nombre))
                 printf("Error: solo letras y espacios.\n");
@@ -85,6 +96,38 @@
         printf("Cliente registrado correctamente.\n");
     }
 
+    void ingresarCantidadVehiculo() {
+        Vehiculo v;
+        int id, encontrada = 0;
+
+        FILE *f = fopen("vehiculos.dat", "rb+");
+        if (!f) return;
+
+        printf("Ingrese ID del vehículo: ");
+        id = leerEnteroConRango(1, 9999);
+
+        while (fread(&v, sizeof(Vehiculo), 1, f)) {
+            if (v.id == id) {
+                printf("Cantidad actual: %d\n", v.cantidad);
+                printf("Ingrese nueva cantidad: ");
+                v.cantidad = leerEnteroConRango(0, 100);
+
+                fseek(f, -(long)sizeof(Vehiculo), SEEK_CUR);
+                fwrite(&v, sizeof(Vehiculo), 1, f);
+
+                encontrada = 1;
+                break;
+            }
+        }
+
+        if (!encontrada)
+            printf("Vehículo no encontrado.\n");
+
+        fclose(f);
+    }
+
+
+
     int seleccionarEstado(){
         int op;
         printf("Seleccione estado del vehículo:\n");
@@ -95,115 +138,147 @@
         return (op == 2);
     }
 
-    int obtenerTiposPorEstado(int usado, char tipos[][20]){
-        Vehiculo v;
-        FILE *f = fopen("vehiculos.dat", "rb");
-        int total = 0;
-        if(!f) return 0;
-
-        while(fread(&v, sizeof(Vehiculo), 1, f)){
-            if(v.disponible && v.usado == usado){
-                int existe = 0;
-                for(int i = 0; i < total; i++){
-                    if(strcmp(tipos[i], v.tipo) == 0){
-                        existe = 1;
-                        break;
-                    }
-                }
-                if(!existe){
-                    strcpy(tipos[total], v.tipo);
-                    total++;
-                }
-            }
-        }
-        fclose(f);
-        return total;
-    }
-
-    void listarVehiculosPorEstadoYTipo(int usado, char *tipo){
-        Vehiculo v;
-        FILE *f = fopen("vehiculos.dat", "rb");
-        if(!f) return;
-
-        printf("\nVehículos disponibles:\n");
-        while(fread(&v, sizeof(Vehiculo), 1, f)){
-            if(v.disponible && v.usado == usado && strcmp(v.tipo, tipo) == 0){
-                printf("ID:%d | %s %s | $%.2f\n",
-                    v.id, v.marca, v.modelo, v.precio);
-            }
-        }
-        fclose(f);
-    }
+    
 
     void buscarVehiculos(){
-        int usado = seleccionarEstado();
-
-        char tipos[10][20];
-        int total = obtenerTiposPorEstado(usado, tipos);
-
-        if(total == 0){
-            printf("No hay vehículos disponibles.\n");
+        Vehiculo v;
+        FILE *f = fopen("vehiculos.dat", "rb");
+        if(!f){
+            printf("No se pudo abrir el archivo de vehículos.\n");
             return;
         }
 
-        printf("\nTipos disponibles:\n");
-        for(int i = 0; i < total; i++){
-            printf("%d. %s\n", i + 1, tipos[i]);
+        /* ====== MENÚ DE MARCAS ====== */
+        int opMarca = menuMarcas();
+        char marca[30];
+
+        if(opMarca == 1)
+            strcpy(marca, "Chevrolet");
+        else if(opMarca == 2)
+            strcpy(marca, "Toyota");
+        else
+            strcpy(marca, "Honda");
+
+        /* ===== 2. ESCOGER ESTADO ===== */
+        int usado = seleccionarEstado();  // 0 nuevo | 1 usado
+
+        printf("\nVehículos disponibles (%s - %s):\n",
+            marca, usado ? "Usado" : "Nuevo");
+        printf("----------------------------------------\n");
+
+        int encontrados = 0;
+
+        /* ====== MOSTRAR VEHÍCULOS ====== */
+        printf("\nVehículos disponibles de la marca %s:\n", marca);
+        printf("-----------------------------------\n");
+
+        int encontrados = 0;
+
+         while(fread(&v, sizeof(Vehiculo), 1, f)){
+        if(v.cantidad > 0 &&
+           strcmp(v.marca, marca) == 0 &&
+           v.usado == usado){
+
+            printf("ID:%d | %s | %s | $%.2f | Stock:%d\n",
+                   v.id,
+                   v.modelo,
+                   v.tipo,
+                   v.precio,
+                   v.cantidad);
+            encontrados = 1;
+        }
+    }
+
+        if(!encontrados){
+            printf("No hay vehículos disponibles de esta marca.\n");
         }
 
-        printf("Seleccione tipo: ");
-        int op = leerEnteroConRango(1, total);
-        listarVehiculosPorEstadoYTipo(usado, tipos[op - 1]);
+        fclose(f);
     }
 
     void venderVehiculo(){
-        Cliente c;
+       Cliente c;
         Vehiculo v;
         Venta venta;
-        int idVehiculo, encontrado = 0;
+        int idVehiculo;
+        int clienteEncontrado = 0;
+        int vehiculoEncontrado = 0;
 
         FILE *fc = fopen("clientes.dat", "rb");
         FILE *fv = fopen("vehiculos.dat", "rb+");
         FILE *fven = fopen("ventas.dat", "ab");
 
-        if(!fc || !fv || !fven) return;
-
-        printf("ID cliente: ");
-        venta.cliente.id = leerEnteroConRango(1,9999);
-
-        while(fread(&c, sizeof(Cliente), 1, fc)){
-            if(c.id == venta.cliente.id){
-                venta.cliente = c;
-                encontrado = 1;
-                break;
-            }
-        }
-
-        if(!encontrado){
-            printf("Cliente no encontrado.\n");
-            fclose(fc); fclose(fv); fclose(fven);
+        if (!fc || !fv || !fven) {
+            printf("Error al abrir los archivos.\n");
+            if (fc) fclose(fc);
+            if (fv) fclose(fv);
+            if (fven) fclose(fven);
             return;
         }
 
-        buscarVehiculos();
+        /* ================== BUSCAR CLIENTE ================== */
+        printf("Ingrese ID del cliente: ");
+        venta.cliente.id = leerEnteroConRango(1, 9999);
 
-        printf("Ingrese ID del vehículo a vender: ");
-        idVehiculo = leerEnteroConRango(1,9999);
-
-        while(fread(&v, sizeof(Vehiculo), 1, fv)){
-            if(v.id == idVehiculo && v.disponible){
-                v.disponible = 0;
-                venta.vehiculo = v;
-                fseek(fv, -sizeof(Vehiculo), SEEK_CUR);
-                fwrite(&v, sizeof(Vehiculo), 1, fv);
+        while (fread(&c, sizeof(Cliente), 1, fc)) {
+            if (c.id == venta.cliente.id) {
+                venta.cliente = c;
+                clienteEncontrado = 1;
                 break;
             }
         }
 
+        if (!clienteEncontrado) {
+            printf("Cliente no encontrado.\n");
+            fclose(fc);
+            fclose(fv);
+            fclose(fven);
+            return;
+        }
+
+        /* ================== MOSTRAR VEHÍCULOS ================== */
+        buscarVehiculos();
+
+        printf("\nIngrese ID del vehículo a vender: ");
+        idVehiculo = leerEnteroConRango(1, 9999);
+
+        rewind(fv);
+
+        /* ================== BUSCAR Y ACTUALIZAR VEHÍCULO ================== */
+        while (fread(&v, sizeof(Vehiculo), 1, fv)) {
+            if (v.id == idVehiculo && v.cantidad > 0) {
+
+                v.cantidad--;               
+                venta.vehiculo = v;
+
+                fseek(fv, -(long)sizeof(Vehiculo), SEEK_CUR);
+                fwrite(&v, sizeof(Vehiculo), 1, fv);
+
+                vehiculoEncontrado = 1;
+                break;
+            }
+        }
+
+        if (!vehiculoEncontrado) {
+            printf("Vehículo no disponible o no existe.\n");
+            fclose(fc);
+            fclose(fv);
+            fclose(fven);
+            return;
+        }
+
+        printf("\nIngrese la fecha de la venta:\n");
+        venta.fechaVenta = ingresarFecha();   // ← AQUÍ se integra la fecha
+        venta.totalPagado = venta.vehiculo.precio;
+
+        /* ================== REGISTRAR VENTA ================== */
         fwrite(&venta, sizeof(Venta), 1, fven);
 
-        fclose(fc); fclose(fv); fclose(fven);
-        printf("Venta realizada correctamente.\n");
+        fclose(fc);
+        fclose(fv);
+        fclose(fven);
+
+        printf("Venta registrada correctamente.\n");
     }
 
     void listarVentas(){
@@ -213,54 +288,62 @@
 
         printf("\n--- VENTAS REGISTRADAS ---\n");
         while(fread(&v, sizeof(Venta), 1, f)){
-            printf("Cliente: %s | Vehículo: %s %s | $%.2f\n",
-                v.cliente.nombre,
+            printf("Cliente: %s\n", v.cliente.nombre);
+            printf("Vehículo: %s %s\n",
                 v.vehiculo.marca,
-                v.vehiculo.modelo,
-                v.vehiculo.precio);
+                v.vehiculo.modelo);
+            printf("Total pagado: $%.2f\n", v.totalPagado);
+            printf("Fecha: %02d/%02d/%d\n",
+                v.fechaVenta.dia,
+                v.fechaVenta.mes,
+                v.fechaVenta.anio);
         }
         fclose(f);
     }
 
     void cargarVehiculosIniciales(){
-        FILE *f = fopen("vehiculos.dat", "rb");
+        FILE *f = fopen("vehiculos.dat","rb");
         if(f){ fclose(f); return; }
 
-        f = fopen("vehiculos.dat", "wb");
+        f = fopen("vehiculos.dat","wb");
 
         Vehiculo v[] = {
-            {1,"Chevrolet","D-Max","Camioneta",1,14000,1},
-            {2,"Toyota","Hilux","Camioneta",0,28000,1},
-            {3,"Kia","Sportage","SUV",1,16500,1},
-            {4,"Hyundai","Tucson","SUV",0,32000,1},
-            {5,"Chevrolet","Sail","Sedan",0,15500,1}
+            {1,"Chevrolet","Onix","Auto",0,19999,5},
+            {2,"Chevrolet","D-Max","Camioneta",1,24000,3},
+            {3,"Toyota","Yaris","Auto",0,20000,4},
+            {4,"Toyota","Hilux","Camioneta",1,28000,2},
+            {5,"Honda","CR-V","SUV",1,30000,2}
         };
 
-        fwrite(v, sizeof(Vehiculo), 5, f);
+        fwrite(v,sizeof(Vehiculo),5,f);
         fclose(f);
     }
 
-    int main(){
-        cargarVehiculosIniciales();
+Fecha ingresarFecha() {
+    Fecha f;
 
-        int op;
-        do{
-            op = menu();
-            switch(op){
-            case 1: 
-            registrarCliente(); 
-                break;
-            case 2: 
-            buscarVehiculos(); 
-                break;
-            case 3: 
-            venderVehiculo(); 
-                break;
-            case 4: 
-                listarVentas(); 
-                break;
-            }
-        }while(op != 5);
+    do {
+        printf("Ingrese día (1-31): ");
+        f.dia = leerEnteroConRango(1, 31);
 
-        return 0;
-    }
+        printf("Ingrese mes (1-12): ");
+        f.mes = leerEnteroConRango(1, 12);
+
+        printf("Ingrese año (2000-2026): ");
+        f.anio = leerEnteroConRango(2000, 2100);
+
+        if (f.mes == 2 && f.dia > 29) {
+            printf("Febrero no tiene más de 29 días.\n");
+        }
+
+        if ((f.mes == 4 || f.mes == 6 || f.mes == 9 || f.mes == 11) && f.dia > 30) {
+            printf("Ese mes solo tiene 30 días.\n");
+        }
+
+    } while (
+        (f.mes == 2 && f.dia > 29) ||
+        ((f.mes == 4 || f.mes == 6 || f.mes == 9 || f.mes == 11) && f.dia > 30)
+    );
+
+    return f;
+}
