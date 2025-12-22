@@ -15,11 +15,11 @@ int main() {
                 break;
 
             case 2:
-                buscarVehiculos();
+                ingresarStockPorMarca();
                 break;
 
             case 3:
-                ingresarCantidadVehiculo();
+                buscarVehiculos();
                 break;
             case 4:
                 venderVehiculo();
@@ -36,3 +36,4 @@ int main() {
 
     return 0;
 }
+
