@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "funciones.h"
 
-int main() {
+int main(){
     int opcion;
 
     cargarVehiculosIniciales();
@@ -28,11 +28,13 @@ int main() {
                 listarVentas();
                 break;
             case 6:
-                printf("Saliendo del sistema...\n");
+                listarClientes();
                 break;
-                }
-
-    } while (opcion != 6);
+            case 7:
+                printf("FIN DEL PROGRAMA...\n");
+                break;
+        }
+    }while (opcion != 7);
 
     return 0;
 }
