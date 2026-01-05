@@ -28,33 +28,30 @@ typedef struct {
 } Venta;
 
 
-/* Utilidades */
 void leerCadena(char *cadena, int n);
 int leerEnteroConRango(int inicio, int fin);
 int validarCedula(char *cedula);
 
 int soloLetras(char *cadena);
 
-/* Menús */
+
 int menu();
 int menuMarcas();
 int seleccionarEstado();
 
-/* Clientes */
-void registrarCliente();
 
-/* Vehículos */
+void registrarCliente();
+int existeClientePorID(int id);
+
 void ingresarStockPorMarca();
 
 Vehiculo buscarVehiculos();
-void ingresarCantidadVehiculo();
 void cargarVehiculosIniciales();
 
-/* Ventas */
+
 void venderVehiculo();
 void listarVentas();
+void listarClientes();
 
-/* Fecha */
 Fecha ingresarFecha();
 float calcularCredito(float precio);
-
