@@ -61,8 +61,8 @@ int menu(){
     do{
         printf("\n---- CONCESIONARIA RUEDAS DE ORO ----\n");
         printf("1. Registrar cliente\n");
-        printf("2. Ingresar stock de vehiculos\n");
-        printf("3. Buscar vehiculos\n");
+        printf("2. Buscar vehiculos\n");
+        printf("3. Ingresar stock de vehículos\n");
         printf("4. Vender vehiculo\n");
         printf("5. Listar ventas\n");
         printf("6. Listar Clientes\n");
@@ -553,3 +553,4 @@ float calcularCredito(float precio){
             return total;
         }
     }
+
