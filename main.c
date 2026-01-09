@@ -13,13 +13,11 @@ int main(){
             case 1:
                 registrarCliente();
                 break;
-
             case 2:
-                ingresarStockPorMarca();
+                menuVehiculos();
                 break;
-
             case 3:
-                buscarVehiculos();
+                listarVehiculos();
                 break;
             case 4:
                 venderVehiculo();
@@ -34,7 +32,7 @@ int main(){
                 printf("FIN DEL PROGRAMA...\n");
                 break;
         }
-    }while (opcion != 7);
+    } while (opcion != 7);
 
     return 0;
 }
