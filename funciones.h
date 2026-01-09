@@ -10,8 +10,8 @@ typedef struct {
     char modelo[30];
     char tipo[20];   
     int usado;       
-    float precio;
-    int cantidad;  
+    float precio;  
+    int disponible;
 } Vehiculo;
 
 typedef struct {
@@ -25,33 +25,32 @@ typedef struct {
     Vehiculo vehiculo;
     Fecha fechaVenta;
     float totalPagado;
+    char vendedor[50];
+    float comision;
 } Venta;
 
 
 void leerCadena(char *cadena, int n);
 int leerEnteroConRango(int inicio, int fin);
-int validarCedula(char *cedula);
+float leerFlotanteConRango(float inicio, float fin);
 
+int validarCedula(char *cedula);
 int soloLetras(char *cadena);
 
-
 int menu();
-int menuMarcas();
-int seleccionarEstado();
-
 
 void registrarCliente();
 int existeClientePorID(int id);
-
-void ingresarStockPorMarca();
-
-Vehiculo buscarVehiculos();
+void listarClientes();
+void menuVehiculos();
+void añadirVehiculo();
+void cambiarEstadoVehiculo();
 void cargarVehiculosIniciales();
-
-
+void listarVehiculos();
 void venderVehiculo();
 void listarVentas();
-void listarClientes();
+void listarVehiculosTodos();
+int seleccionarEstado();
 
 Fecha ingresarFecha();
 float calcularCredito(float precio);
